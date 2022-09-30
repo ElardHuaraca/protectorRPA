@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound
-from collectEmail import apps
 import re
 
 # Create your views here.
@@ -12,7 +11,6 @@ def index(request):
         'success': False,
         'message': '',
     }
-    print(apps.thread.is_alive())
     return render(request, 'index.html', context)
 
 
