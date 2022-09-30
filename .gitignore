@@ -167,6 +167,7 @@ cython_debug/
 #CustomFiles
 log.txt
 collectEmail/config.py
+automationDataProtector/modules
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
