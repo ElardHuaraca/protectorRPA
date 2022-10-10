@@ -11,3 +11,8 @@ class Email(models.Model):
 
 class UltimateVerification(models.Model):
     comprovate = models.DateTimeField(auto_now_add=True)
+
+
+class ScheduleOrLink(models.Model):
+    id = models.CharField(max_length=255, primary_key=True)
+    body = models.CharField(max_length=255)
