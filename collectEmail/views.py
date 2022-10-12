@@ -2,15 +2,26 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound
 import re
 
+from collectEmail.utils.Threads import ThreadsStart
+
 # Create your views here.
+
+start = False
 
 
 def index(request):
+    global start
+
     context = {
         'error': False,
         'success': False,
         'message': '',
     }
+
+    if not start:
+        ThreadsStart()
+        start = True
+
     return render(request, 'index.html', context)
 
 
