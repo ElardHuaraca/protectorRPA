@@ -1,3 +1,4 @@
+from email.policy import default
 from time import localtime
 from django.db import models
 
@@ -16,3 +17,4 @@ class UltimateVerification(models.Model):
 class ScheduleOrLink(models.Model):
     id = models.CharField(max_length=255, primary_key=True)
     body = models.CharField(max_length=255)
+    type = models.CharField(max_length=255, default='schedule')
