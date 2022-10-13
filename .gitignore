@@ -169,7 +169,7 @@ cython_debug/
 log.txt
 collectEmail/config.py
 automationDataProtector/modules
-report.xlsx
+reporte.xlsx
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
