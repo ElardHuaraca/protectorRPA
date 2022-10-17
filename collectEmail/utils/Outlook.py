@@ -17,22 +17,22 @@ class Outlook():
         pass
 
     def login(self):
-        self.email = Outlook.GET_ENV('EMAIL')
-        self.password = Outlook.GET_ENV('PASSWORD')
+        self.email = self.GET_ENV('EMAIL')
+        self.password = self.GET_ENV('PASSWORD')
         loggin_attempt = 0
 
         while True:
             try:
-                self.imap = imaplib.IMAP4_SSL(Outlook.GET_ENV(
-                    'IMAP_SERVER'), Outlook.GET_ENV('IMAP_PORT'))
+                self.imap = imaplib.IMAP4_SSL(self.GET_ENV(
+                    'IMAP_SERVER'), self.GET_ENV('IMAP_PORT'))
 
                 r, d = self.imap.login(self.email, self.password)
                 assert r == 'OK', 'login failed: %s' % str(r)
 
-                print(Outlook.LOG_INFO + "Accediendo como %s" % email, d)
+                print(self.LOG_INFO + "Accediendo como %s" % email, d)
                 return
             except Exception as e:
-                print(Outlook.LOG_INFO + "Error al iniciar sesion: %s" % str(e))
+                print(self.LOG_INFO + "Error al iniciar sesion: %s" % str(e))
 
                 loggin_attempt += 1
                 if loggin_attempt > 3:
@@ -81,7 +81,7 @@ class Outlook():
 
         for id in ids:
             self.getEmail(id)
-            if 'Data Protector Notification' in self.email_message['From'] and Outlook.GET_ENV('EMAIL') in self.email_message['To'] and ('link' in self.email_message['Subject'].lower() or 'schedule' in self.email_message['Subject'].lower()):
+            if 'Data Protector Notification' in self.email_message['From'] and self.GET_ENV('EMAIL') in self.email_message['To'] and ('link' in self.email_message['Subject'].lower() or 'schedule' in self.email_message['Subject'].lower()):
                 subject = self.email_message['Subject'].replace('-', '')
                 split_subject = subject.split(' ')
 
