@@ -1,4 +1,4 @@
-from email.policy import default
+
 from time import localtime
 from django.db import models
 
