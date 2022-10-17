@@ -4,15 +4,20 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from collectEmail.utils.MainProcess import MainProcessCollect
 from django.utils import timezone
+import environ
 
 
 class ThreadsStart():
+
+    GET_ENV = environ.Env()
 
     def __init__(self):
         self.readEmailThread()
 
     def readEmailThread(self):
-        MainProcessCollect.saveFirstFile()
+        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_1'))
+        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_2'))
+        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_3'))
 
         scheduler = BackgroundScheduler()
         scheduler.add_job(MainProcessCollect, 'interval',
