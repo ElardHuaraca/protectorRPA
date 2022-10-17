@@ -170,6 +170,8 @@ log.txt
 collectEmail/config.py
 automationDataProtector/modules
 reporte.xlsx
+schedule_deleted.xlsx
+link_deleted.xlsx
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
