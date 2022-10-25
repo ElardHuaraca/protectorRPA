@@ -18,8 +18,10 @@ class ThreadsStart():
         MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_1'))
         MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_2'))
         MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_3'))
+        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_4'))
+        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_5'))
 
         scheduler = BackgroundScheduler()
         scheduler.add_job(MainProcessCollect, 'interval',
-                          seconds=60*5, next_run_time=timezone.now(), id='collect_data_from_email', replace_existing=True)
+                          seconds=60*20, next_run_time=timezone.now(), id='collect_data_from_email', replace_existing=True)
         scheduler.start()
