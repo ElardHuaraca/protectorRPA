@@ -169,7 +169,9 @@ cython_debug/
 log.txt
 collectEmail/config.py
 automationDataProtector/modules
-reporte.xlsx
+reporte_sem.xlsx
+reporte_men.xlsx
+reporte_sin_grupos.xlsx
 schedule_deleted.xlsx
 link_deleted.xlsx
 
