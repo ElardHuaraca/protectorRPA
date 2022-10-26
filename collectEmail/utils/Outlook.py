@@ -1,11 +1,12 @@
-from operator import contains
-from webbrowser import get
-from fileinput import filename
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from os.path import basename
 import datetime
 import email
 import imaplib
+import smtplib
 import environ
-import pandas as pd
 
 
 class Outlook():
@@ -39,6 +40,39 @@ class Outlook():
                     continue
 
                 assert False, 'login failed'
+
+    def send_mail(self, to, subject):
+
+        msg = MIMEMultipart()
+        msg['From'] = self.email
+        msg['To'] = to
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText('Reportes para generar el LINK'))
+
+        """ add files to email """
+        files = [self.GET_ENV('FILE_1'), self.GET_ENV('FILE_2'), self.GET_ENV(
+            'FILE_3'), self.GET_ENV('FILE_4'), self.GET_ENV('FILE_5')]
+
+        for file in files:
+            with open(file, 'rb') as f:
+                part = MIMEApplication(f.read(), Name=basename(file))
+            part['Content-Disposition'] = 'attachment; filename="%s"' % basename(
+                file)
+            msg.attach(part)
+
+        try:
+            self.smtp = smtplib.SMTP(self.GET_ENV(
+                'SMTP_SERVER'), self.GET_ENV('SMTP_PORT'))
+            self.smtp.ehlo()
+            self.smtp.starttls()
+            self.smtp.login(self.email, self.password)
+            self.smtp.sendmail(msg['From'], msg['To'], msg.as_string())
+        except Exception as e:
+            print(self.LOG_INFO + "Error al enviar el correo: %s" % str(e))
+            return False
+
+        return True
 
     def readFolders(self, folder='Inbox'):
         return self.imap.select(folder)
