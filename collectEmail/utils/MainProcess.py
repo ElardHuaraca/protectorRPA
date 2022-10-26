@@ -3,8 +3,9 @@ from itertools import count
 import os
 import re
 from turtle import left
+from automationDataProtector import settings
 from collectEmail.utils.Outlook import Outlook
-from collectEmail.models import ScheduleOrLink, UltimateVerification
+from collectEmail.models import Email, ScheduleOrLink, UltimateVerification
 from django.utils import timezone
 from openpyxl import load_workbook, Workbook
 import pandas as pd
@@ -19,14 +20,15 @@ class MainProcessCollect():
         self.start_collect()
 
     def start_collect(self):
-        outlook = Outlook()
-        outlook.login()
-        outlook.readFolders()
-        ids = outlook.readAllIdByDate(days=13)
-        mails = outlook.getMailByIdsAndFrom(ids)
+        self.outlook = Outlook()
+        self.outlook.login()
+        self.outlook.readFolders()
+        ids = self.outlook.readAllIdByDate(days=13)
+        mails = self.outlook.getMailByIdsAndFrom(ids)
         self.wait_more_emails(mails)
 
     """ first request create file to write items for Link """
+
     def saveFirstFile(name):
         """ Verify file exist """
         if not os.path.exists(name):
@@ -91,10 +93,22 @@ class MainProcessCollect():
     """ send email with link and delete all sheets in excel file """
 
     def send_report_link(self):
-        """ delete time saved """
-        time = UltimateVerification.objects.all().first()
-        time.delete()
-        return
+
+        email = Email.objects.all().first()
+        if email is not None:
+            state_send = self.outlook.send_mail(
+                to=email.email, subject='Reportes para hacer el LINK',)
+            if state_send:
+
+                """ delete all files .xlsx """
+                self.delete_files()
+
+                email.delete()
+
+                """ delete time saved """
+                time = UltimateVerification.objects.all().first()
+                time.delete()
+    print('function_send email with link')
 
     """ save time if time to verify is time passed 2 hours or send email with link """
 
@@ -331,3 +345,13 @@ class MainProcessCollect():
 
         writer.save()
         return writer.close()
+
+    def delete_files(self):
+        file = [self.GET_ENV('FILE_1'), self.GET_ENV('FILE_2'), self.GET_ENV(
+            'FILE_3'), self.GET_ENV('FILE_4'), self.GET_ENV('FILE_5')]
+        for f in file:
+            path = os.path.join(settings.BASE_DIR, f)
+            os.remove(path)
+
+        for f in file:
+            MainProcessCollect.saveFirstFile(f)
