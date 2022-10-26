@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseNotFound
 import re
+from collectEmail.models import Email
 
 from collectEmail.utils.Threads import ThreadsStart
 
@@ -36,6 +37,11 @@ def save(request):
                 'message': 'El correo es requerido'
             }
         elif(isValidEmail(email)):
+
+            save_mail = Email.objects.create()
+            save_mail.email = email
+            save_mail.save()
+
             context = {
                 'error': False,
                 'success': True,
