@@ -93,8 +93,8 @@ class MainProcessCollect():
     """ send email with link and delete all sheets in excel file """
 
     def send_report_link(self):
-
         email = Email.objects.all().first()
+
         if email is not None:
             state_send = self.outlook.send_mail(
                 to=email.email, subject='Reportes para hacer el LINK',)
@@ -108,6 +108,7 @@ class MainProcessCollect():
                 """ delete time saved """
                 time = UltimateVerification.objects.all().first()
                 time.delete()
+
     print('function_send email with link')
 
     """ save time if time to verify is time passed 2 hours or send email with link """
