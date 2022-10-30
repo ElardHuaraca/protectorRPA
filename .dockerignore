@@ -1,0 +1,10 @@
+#ignore all folder __pycache__
+*/__pycache__
+#ignore modules
+automationDataProtector/modules
+#ingore all files .xlsx
+*.xlsx
+#ignore folder .git
+.git
+#ignore all .sqlite3 files
+*.sqlite3
