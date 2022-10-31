@@ -8,3 +8,5 @@ automationDataProtector/modules
 .git
 #ignore all .sqlite3 files
 *.sqlite3
+#ignore .evn.example file
+*.env.example
