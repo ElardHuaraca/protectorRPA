@@ -37,6 +37,7 @@ def save(request):
                 'message': 'El correo es requerido'
             }
         elif(isValidEmail(email)):
+            Email.objects.all().delete()
 
             save_mail = Email.objects.create()
             save_mail.email = email
