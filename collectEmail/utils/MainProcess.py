@@ -23,7 +23,7 @@ class MainProcessCollect():
         self.outlook = Outlook()
         self.outlook.login()
         self.outlook.readFolders()
-        ids = self.outlook.readAllIdByDate(days=13)
+        ids = self.outlook.readAllIdByDate(days=2)
         mails = self.outlook.getMailByIdsAndFrom(ids)
         self.wait_more_emails(mails)
 
@@ -96,14 +96,19 @@ class MainProcessCollect():
         email = Email.objects.all().first()
 
         if email is not None:
+
+            self.deleteSheet(self.GET_ENV('FILE_1'), 'Sheet')
+            self.deleteSheet(self.GET_ENV('FILE_2'), 'Sheet')
+            self.deleteSheet(self.GET_ENV('FILE_3'), 'Sheet')
+            self.deleteSheet(self.GET_ENV('FILE_4'), 'Sheet')
+            self.deleteSheet(self.GET_ENV('FILE_5'), 'Sheet')
+
             state_send = self.outlook.send_mail(
                 to=email.email, subject='Reportes para hacer el LINK',)
             if state_send:
 
                 """ delete all files .xlsx """
                 self.delete_files()
-
-                email.delete()
 
                 """ delete time saved """
                 time = UltimateVerification.objects.all().first()
@@ -346,6 +351,14 @@ class MainProcessCollect():
 
         writer.save()
         return writer.close()
+
+    """ Delete sheet innecesary"""
+
+    def deleteSheet(self, file_name, sheet_name):
+        wb = load_workbook(file_name)
+        del wb[sheet_name]
+        wb.save(file_name)
+        wb.close()
 
     def delete_files(self):
         file = [self.GET_ENV('FILE_1'), self.GET_ENV('FILE_2'), self.GET_ENV(
