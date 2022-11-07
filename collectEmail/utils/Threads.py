@@ -15,11 +15,9 @@ class ThreadsStart():
         self.readEmailThread()
 
     def readEmailThread(self):
-        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_1'))
-        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_2'))
-        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_3'))
-        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_4'))
-        MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_5'))
+        """ Save file if not exist in project root folder """
+        for i in range(1, 6):
+            MainProcessCollect.saveFirstFile(self.GET_ENV('FILE_%s' % i))
 
         scheduler = BackgroundScheduler()
         scheduler.add_job(MainProcessCollect, 'interval',
