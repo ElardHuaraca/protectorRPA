@@ -24,7 +24,7 @@ class MainProcessCollect():
         self.outlook = Outlook()
         self.outlook.login()
         self.outlook.readFolders()
-        ids = self.outlook.readAllIdByDate(days=4)
+        ids = self.outlook.readAllIdByDate(days=1)
         mails = self.outlook.getMailByIdsAndFrom(ids)
         self.wait_more_emails(mails)
 
@@ -354,8 +354,6 @@ class MainProcessCollect():
         for _, row in dataframe.iterrows():
             self.table_schedule[0].loc[self.table_schedule[0]['Specification_lower'] == row['Specification_lower'], [
                 'Group', 'Next Execution']] = [row['Group'], row['Next Execution']]
-        """ self.table_schedule[0].loc[self.table_schedule[0]['Specification_lower'].isin(
-            dataframe['Specification_lower']), ['Group', 'Next Execution']] = [dataframe['Group'], dataframe['Next Execution']] """
 
     """ Separate schedule to week and month """
 
