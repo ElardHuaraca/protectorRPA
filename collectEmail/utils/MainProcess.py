@@ -1,15 +1,16 @@
 from calendar import c
 from itertools import count
-import os
-import re
 from turtle import left
 from automationDataProtector import settings
 from collectEmail.utils.Outlook import Outlook
 from collectEmail.models import Email, ScheduleOrLink, UltimateVerification
+from collectEmail.utils.FilterEnum import FilterEnum
 from django.utils import timezone
 from openpyxl import load_workbook, Workbook
 import pandas as pd
 import environ
+import os
+import re
 
 
 class MainProcessCollect():
@@ -23,7 +24,7 @@ class MainProcessCollect():
         self.outlook = Outlook()
         self.outlook.login()
         self.outlook.readFolders()
-        ids = self.outlook.readAllIdByDate(days=2)
+        ids = self.outlook.readAllIdByDate(days=4)
         mails = self.outlook.getMailByIdsAndFrom(ids)
         self.wait_more_emails(mails)
 
@@ -75,7 +76,7 @@ class MainProcessCollect():
             if mail['schedule'] is not None and mail['link'] is None:
                 link = self.get_email_saved()
                 if link is not None:
-                    return self.apply_filters(mail['schedule'], link.body)
+                    self.apply_filters(mail['schedule'], link.body)
                 else:
                     self.save_email_body(mail, 'schedule')
                     continue
@@ -83,12 +84,12 @@ class MainProcessCollect():
             elif mail['schedule'] is None and mail['link'] is not None:
                 schedule = self.get_email_saved()
                 if schedule is not None:
-                    return self.apply_filters(schedule.body, mail['link'])
+                    self.apply_filters(schedule.body, mail['link'])
                 else:
                     self.save_email_body(mail, 'link')
                     continue
             else:
-                return self.apply_filters(mail['schedule'], mail['link'])
+                self.apply_filters(mail['schedule'], mail['link'])
 
     """ send email with link and delete all sheets in excel file """
 
@@ -148,45 +149,62 @@ class MainProcessCollect():
         self.table_schedule = pd.read_html(schedule_)
         self.table_link = pd.read_html(link_)
 
+        """ remove characteres special from column name"""
+
+        for column in self.table_schedule[0].columns:
+            self.table_schedule[0].rename(
+                columns={column: column.replace('= ', '')}, inplace=True)
+
+        for column in self.table_link[0].columns:
+            self.table_link[0].rename(
+                columns={column: column.replace('= ', '')}, inplace=True)
+
         self.table_schedule[0].sort_values(by=['Specification'], inplace=True)
         self.table_link[0].sort_values(by=['Specification'], inplace=True)
 
-        self.check_query_and_apply_filter(
-            "Specification.str.contains('(?i)dia')")
-        self.check_query_and_apply_filter(
-            "Specification.str.contains('(?i)dem|demanda')")
-        self.check_query_and_apply_filter(
-            "Specification.str.contains('(?i)crq')")
-        self.check_query_and_apply_filter(
-            "Specification.str.contains('(?i)rfc')")
+        for f in FilterEnum.MALFORMED:
+            self.replace_string_into_column(f, '', 'Specification')
+            self.replace_string_into_column(f, '', 'Group')
+            self.replace_string_into_column(f, '', 'Session Type')
+            self.replace_string_into_column(f, '', 'Mode')
+            self.replace_string_into_column(f, '', 'Start Time')
+            self.replace_string_into_column(f, '', 'Files')
+            self.replace_string_into_column(f, '', 'Session ID')
+            self.replace_string_into_column(f, '', 'Next Execution')
+            self.replace_string_into_column(f, '', 'Queuing')
+            self.replace_string_into_column(f, '', 'Duration')
+            self.replace_string_into_column(f, '', '# Media')
+            self.replace_string_into_column(f, '', 'GB Written')
+            self.replace_string_into_column(f, '', '# Errors')
+            self.replace_string_into_column(f, '', '# Files')
+
+        self.check_query_and_apply_filter("Specification.isna()")
+
+        for f in FilterEnum.SPECIFICATION:
+            self.check_query_and_apply_filter(
+                "Specification.str.contains('(?i)"+f+"')")
+
         self.check_query_and_apply_filter("Group.isna()")
-        self.check_query_and_apply_filter("Group.str.contains('(?i)apagado')")
-        self.check_query_and_apply_filter("Group.str.contains('(?i)migrado')")
-        self.check_query_and_apply_filter("Group.str.contains('(?i)de baja')")
-        self.check_query_and_apply_filter(
-            "Group.str.contains('(?i)desactivado_temporalmente')")
-        self.check_query_and_apply_filter("Group.str.contains('(?i)test')")
-        self.check_query_and_apply_filter("Group.str.contains('(?i)migrado')")
-        self.check_query_and_apply_filter(
-            "Group.str.contains('(?i)historicos')")
+
+        for f in FilterEnum.GROUP:
+            self.check_query_and_apply_filter(
+                "Group.str.contains('(?i)"+f+"')")
+
         self.check_query_and_apply_filter("Group.str.len() < 1")
         self.check_query_and_apply_filter(
             "`Session Type`.str.contains('(?i)copy')")
 
-        self.replace_string_into_column('(?i)mssql', '', 'Specification')
-        self.replace_string_into_column('(?i)veagent', '', 'Specification')
-        self.replace_string_into_column('(?i)hana', '', 'Specification', 1)
-        self.replace_string_into_column('(?i)sap', '', 'Specification', 1)
-        self.replace_string_into_column('(?i)oracle8', '', 'Specification')
-        self.replace_string_into_column('(?i)idb', '', 'Specification', 1)
-        self.replace_string_into_column('(?i)sybase', '', 'Specification', 1)
+        self.replace_string_start_column('(?i)mssql', '', 'Specification')
+        self.replace_string_start_column('(?i)veagent', '', 'Specification')
+        self.replace_string_start_column('(?i)hana', '', 'Specification', 1)
+        self.replace_string_start_column('(?i)sap', '', 'Specification', 1)
+        self.replace_string_start_column('(?i)oracle8', '', 'Specification')
+        self.replace_string_start_column('(?i)idb', '', 'Specification', 1)
+        self.replace_string_start_column('(?i)sybase', '', 'Specification', 1)
 
-        self.delete_schedule_items_with_status(
-            "Status.str.contains('(?i)aborted')")
-        self.delete_schedule_items_with_status(
-            "Status.str.contains('(?i)failed')")
-        self.delete_schedule_items_with_status(
-            "Status.str.contains('(?i)completed/failures')")
+        for f in FilterEnum.STATUS:
+            self.delete_schedule_items_with_status(
+                "Status.str.contains('(?i)"+f+"')")
 
         self.delete_duplicates_items_from_schedules()
         self.remove_schedule_olds()
@@ -194,7 +212,7 @@ class MainProcessCollect():
         self.separate_table_schedule_men_sem()
         self.delete_email_saved()
 
-        print('Filters applied')
+        print('Filters applied %s' % self.key_)
 
     def delete_email_saved(self):
         ScheduleOrLink.objects.filter(id=self.key_).delete()
@@ -230,14 +248,28 @@ class MainProcessCollect():
                 table_link_deleted_days.index, inplace=True)
             self.table_link[0].reset_index(drop=True, inplace=True)
 
-    """ replace into colum values for new values """
+    """ replace into colum values start with, for new values """
 
-    def replace_string_into_column(self, old, new, colum, limit=0):
+    def replace_string_start_column(self, old, new, colum, limit=0):
         start_with = old.replace('(?i)', '')
         self.table_schedule[0][colum] = self.table_schedule[0][colum].map(lambda x: re.sub(
             old, new, x, limit) if x.lower().startswith(start_with) else x)
 
         self.table_schedule[0][colum] = self.table_schedule[0][colum].str.strip()
+
+    """ replace into colum values for new values """
+
+    def replace_string_into_column(self, old, new, colum):
+        [schedule_colum_exist, link_colum_exist] = self.colum_exist(colum)
+
+        if schedule_colum_exist:
+            if pd.api.types.infer_dtype(self.table_schedule[0][colum]) == 'string':
+                self.table_schedule[0][colum] = self.table_schedule[0][colum].str.replace(
+                    old, new)
+        if link_colum_exist:
+            if pd.api.types.infer_dtype(self.table_link[0][colum]) == 'string':
+                self.table_link[0][colum] = self.table_link[0][colum].str.replace(
+                    old, new)
 
     """ Return if colum exist in table """
 
@@ -276,9 +308,9 @@ class MainProcessCollect():
 
         table_schedule_olds = pd.merge(self.table_schedule[0], self.table_link[0],
                                        how='left', on=['Specification_lower'], indicator=True).set_axis(self.table_schedule[0].index)
-        table_schedule_olds['_merge'] = table_schedule_olds['_merge'] == 'left_only'
+
         table_schedule_olds = table_schedule_olds.query(
-            '_merge == True', engine='python')
+            '_merge == "left_only"', engine='python')
 
         self.write_excel_file(table_schedule_olds, self.GET_ENV('FILE_2'))
 
@@ -290,25 +322,46 @@ class MainProcessCollect():
     def copy_schedule_link_to_table_schedule(self):
         table_schedule_copy = pd.merge(self.table_schedule[0], self.table_link[0], how='right', on=[
             'Specification_lower'], indicator=True).set_axis(self.table_link[0].index)
-        table_schedule_copy['_merge'] = table_schedule_copy['_merge'] == 'right_only'
 
-        table_schedule_copy = table_schedule_copy.query(
-            '_merge == True', engine='python')
+        table_schedule_copy_both = table_schedule_copy.query(
+            '_merge == "both"', engine='python')
 
-        self.table_schedule[0].drop(
-            columns=['Specification_lower'], axis=1, inplace=True)
+        self.update_table_schedule(table_schedule_copy_both)
+
+        """ delete column innecesary """
         self.table_link[0].drop(
-            columns=['Specification_lower'], axis=1, inplace=True)
+            ['Type', 'Specification_lower'], axis=1, inplace=True)
+        self.table_schedule[0].drop(
+            ['Specification_lower', 'Success', '# Warnings'], axis=1, inplace=True)
+
+        table_schedule_copy_right = table_schedule_copy.query(
+            '_merge == "right_only"', engine='python')
 
         table_schedule_copy = table_schedule_copy.drop(
             columns=['_merge', 'Specification_lower', 'Type'], axis=1)
 
-        self.table_schedule[0] = pd.merge(
-            self.table_schedule[0], table_schedule_copy, how='left')
+        self.table_schedule[0] = pd.concat(
+            [self.table_schedule[0], self.table_link[0].loc[table_schedule_copy_right.index]], ignore_index=True)
+    """ Update Colums in table_schedule """
+
+    def update_table_schedule(self, dataframe):
+        """ Add new columns """
+        self.table_schedule[0]['Group'] = '-'
+        self.table_schedule[0]['Next Execution'] = '-'
+
+        """ Update data from column if Specification_lower equals in both tables """
+
+        for _, row in dataframe.iterrows():
+            self.table_schedule[0].loc[self.table_schedule[0]['Specification_lower'] == row['Specification_lower'], [
+                'Group', 'Next Execution']] = [row['Group'], row['Next Execution']]
+        """ self.table_schedule[0].loc[self.table_schedule[0]['Specification_lower'].isin(
+            dataframe['Specification_lower']), ['Group', 'Next Execution']] = [dataframe['Group'], dataframe['Next Execution']] """
 
     """ Separate schedule to week and month """
 
     def separate_table_schedule_men_sem(self):
+        """ print(self.table_schedule[0]) """
+
         table_schedule_sem = self.table_schedule[0].query(
             "Specification.str.contains('(?i)sem')", engine='python')
         table_schedule_men = self.table_schedule[0].query(
@@ -355,10 +408,10 @@ class MainProcessCollect():
     """ Delete sheet innecesary"""
 
     def deleteSheet(self, file_name, sheet_name):
-        wb = load_workbook(file_name)
-        del wb[sheet_name]
-        wb.save(file_name)
-        wb.close()
+        wb_f = load_workbook(file_name)
+        del wb_f[sheet_name]
+        wb_f.save(file_name)
+        wb_f.close()
 
     def delete_files(self):
         file = [self.GET_ENV('FILE_1'), self.GET_ENV('FILE_2'), self.GET_ENV(
