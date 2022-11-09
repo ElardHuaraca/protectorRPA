@@ -7,6 +7,7 @@ import email
 import imaplib
 import smtplib
 import environ
+import os
 
 
 class Outlook():
@@ -94,15 +95,20 @@ class Outlook():
 
     def getBody(self):
         if self.email_message.is_multipart():
+
+            html = None
+            for part in self.email_message.walk():
+                if part.get_filename() is None:
+                    continue
+                html = part.get_payload(decode=True).decode('utf-8')
+
             body = {
-                'message': self.email_message.get_payload(0),
-                'attachment': self.email_message.get_payload(1, True)
+                'message': self.email_message.get_payload(0) if html is None else html
             }
             return body
         else:
             body = {
-                'message': self.email_message.get_payload(0),
-                'attachment': None
+                'message': self.email_message.get_payload(0)
             }
             return body
 
@@ -115,7 +121,7 @@ class Outlook():
 
         for id in ids:
             self.getEmail(id)
-            if 'Data Protector Notification' in self.email_message['From'] and self.GET_ENV('EMAIL') in self.email_message['To'] and ('link' in self.email_message['Subject'].lower() or 'schedule' in self.email_message['Subject'].lower()):
+            if self.GET_ENV('EMAIL') in self.email_message['To'] and ('link' in self.email_message['Subject'].lower() or 'schedule' in self.email_message['Subject'].lower()):
                 subject = self.email_message['Subject'].replace('-', '')
                 split_subject = subject.split(' ')
 
