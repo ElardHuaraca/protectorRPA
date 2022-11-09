@@ -348,7 +348,7 @@ class MainProcessCollect():
             table_schedule_copy_right['Specification_lower'])]
 
         self.table_schedule[0] = pd.concat(
-            [self.table_schedule[0], self.table_link[0].loc[table_schedule_copy_right.index]], ignore_index=True)
+            [self.table_schedule[0], table_schedule_copy_right], ignore_index=True)
     """ Update Colums in table_schedule """
 
     def update_table_schedule(self, dataframe):
