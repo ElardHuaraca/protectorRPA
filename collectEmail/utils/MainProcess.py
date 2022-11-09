@@ -91,6 +91,8 @@ class MainProcessCollect():
             else:
                 self.apply_filters(mail['schedule'], mail['link'])
 
+        print('End process mails')
+
     """ send email with link and delete all sheets in excel file """
 
     def send_report_link(self):
@@ -299,6 +301,8 @@ class MainProcessCollect():
             subset=['Specification'], keep='last', inplace=True)
 
         self.table_schedule[0].sort_values(by=['Specification'], inplace=True)
+        self.table_schedule[0].reset_index(drop=True, inplace=True)
+        self.table_link[0].reset_index(drop=True, inplace=True)
 
     """ Remove old schedule not contain in link """
 
@@ -306,16 +310,19 @@ class MainProcessCollect():
         self.table_schedule[0]['Specification_lower'] = self.table_schedule[0]['Specification'].str.lower()
         self.table_link[0]['Specification_lower'] = self.table_link[0]['Specification'].str.lower()
 
-        table_schedule_olds = pd.merge(self.table_schedule[0], self.table_link[0],
-                                       how='left', on=['Specification_lower'], indicator=True).set_axis(self.table_schedule[0].index)
+        table_schedule_olds = pd.merge(self.table_link[0], self.table_schedule[0],
+                                       how='right', on=['Specification_lower'], indicator=True)
 
         table_schedule_olds = table_schedule_olds.query(
             '_merge == "left_only"', engine='python')
 
         self.write_excel_file(table_schedule_olds, self.GET_ENV('FILE_2'))
 
+        table_schedule_loc = self.table_schedule[0].loc[self.table_schedule[0]['Specification_lower'].isin(
+            table_schedule_olds['Specification_lower'])]
+
         """ delete only table_schedule._merge == True """
-        self.table_schedule[0].drop(table_schedule_olds.index, inplace=True)
+        self.table_schedule[0].drop(table_schedule_loc.index, inplace=True)
 
     """ Copy schedule link to table schedule """
 
@@ -337,8 +344,8 @@ class MainProcessCollect():
         table_schedule_copy_right = table_schedule_copy.query(
             '_merge == "right_only"', engine='python')
 
-        table_schedule_copy = table_schedule_copy.drop(
-            columns=['_merge', 'Specification_lower', 'Type'], axis=1)
+        table_schedule_copy_right = self.table_link[0].loc[self.table_link[0]['Specification_lower'].isin(
+            table_schedule_copy_right['Specification_lower'])]
 
         self.table_schedule[0] = pd.concat(
             [self.table_schedule[0], self.table_link[0].loc[table_schedule_copy_right.index]], ignore_index=True)
