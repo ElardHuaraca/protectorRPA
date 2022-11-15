@@ -1,3 +1,5 @@
+{% load bootstrap5 %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -7,11 +9,9 @@
     <meta name="description" content="Pagina de inicio" />
     <meta name="keywords" content="Pagina de inicio" />
     <title>Establecer EMAIL</title>
-    {% load bootstrap5 %}
     {% bootstrap_css %}
-    {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"/>
-    <link rel="icon" type="image/ico" href="{% static 'favicon.ico' %}" />
+    <link rel="icon" type="image/ico" href="{% static '/favicon.ico' %}" />
   </head>
   <body>
     <div class="bg-image position-fixed h-100 w-100"
