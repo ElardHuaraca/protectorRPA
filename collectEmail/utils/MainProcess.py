@@ -405,7 +405,7 @@ class MainProcessCollect():
             table.to_excel(writer, sheet_name=self.key_, index=False)
 
         writer.save()
-        return writer.close()
+        writer.close()
 
     """ Delete sheet innecesary"""
 
