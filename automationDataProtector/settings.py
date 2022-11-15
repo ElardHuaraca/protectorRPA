@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 import os
 import environ
+import platform
 
 env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env()
@@ -30,8 +31,11 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1'
+]
 
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1']
 
 # Application definition
 
@@ -122,7 +126,15 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'collectEmail/static')
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') if platform.system(
+).startswith('Windows') else '/var/www/app/static'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
