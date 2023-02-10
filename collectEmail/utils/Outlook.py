@@ -2,12 +2,13 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from os.path import basename
+from urllib.parse import urlencode
 import datetime
 import email
 import imaplib
 import smtplib
 import environ
-import os
+import requests
 
 
 class Outlook():
@@ -18,6 +19,21 @@ class Outlook():
     def __init__(self) -> None:
         pass
 
+    def access_token(self):
+        tenant = self.GET_ENV('TENANT_ID')
+        client_id = self.GET_ENV('CLIENT_ID')
+        client_secret = self.GET_ENV('CLIENT_SECRET')
+
+        url = f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+        payload = urlencode({
+            "client_id": client_id,
+            "scope": "https://graph.microsoft.com/.default",
+            "client_secret": client_secret,
+            "grant_type": "client_credentials"
+        })
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        return requests.post(url, headers=headers, data=payload).json()['access_token']
+
     def login(self):
         self.email = self.GET_ENV('EMAIL')
         self.password = self.GET_ENV('PASSWORD')
@@ -25,10 +41,16 @@ class Outlook():
 
         while True:
             try:
-                self.imap = imaplib.IMAP4_SSL(self.GET_ENV(
-                    'IMAP_SERVER'), self.GET_ENV('IMAP_PORT'))
+                self.imap = imaplib.IMAP4_SSL(
+                    self.GET_ENV('IMAP_SERVER'), self.GET_ENV('IMAP_PORT'))
 
-                r, d = self.imap.login(self.email, self.password)
+                self.imap.debug = 4
+
+                r, d = self.imap.authenticate(
+                    'XOAUTH2', lambda _: f"user={self.email}\1auth=Bearer {self.access_token()}")
+
+                """ r, d = self.imap.login(self.email, self.password) """
+
                 assert r == 'OK', 'login failed: %s' % str(r)
 
                 print(self.LOG_INFO + "Accediendo como %s" % email, d)
@@ -100,8 +122,8 @@ class Outlook():
             for part in self.email_message.walk():
                 if part.get_filename() is None:
                     continue
-                html = part.get_payload(decode=True).decode('utf-8')
-
+                html = part.get_payload(decode=True).decode(
+                    encoding='utf-8', errors='ignore')
             body = {
                 'message': self.email_message.get_payload(0) if html is None else html
             }
