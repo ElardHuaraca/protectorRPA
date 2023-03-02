@@ -27,12 +27,15 @@ class Outlook():
         url = f"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
         payload = urlencode({
             "client_id": client_id,
-            "scope": "https://graph.microsoft.com/.default",
+            "scope": "https://outlook.office365.com/.default",
             "client_secret": client_secret,
             "grant_type": "client_credentials"
         })
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         return requests.post(url, headers=headers, data=payload).json()['access_token']
+
+    def generate_auth_token(self, token):
+        return f"user={self.email}\1auth=Bearer {token}\1\1".encode()
 
     def login(self):
         self.email = self.GET_ENV('EMAIL')
@@ -41,13 +44,13 @@ class Outlook():
 
         while True:
             try:
-                self.imap = imaplib.IMAP4_SSL(
-                    self.GET_ENV('IMAP_SERVER'), self.GET_ENV('IMAP_PORT'))
+                self.imap = imaplib.IMAP4_SSL(self.GET_ENV(
+                    'IMAP_SERVER'), self.GET_ENV('IMAP_PORT'))
 
-                self.imap.debug = 4
+                token = self.access_token()
 
                 r, d = self.imap.authenticate(
-                    'XOAUTH2', lambda _: f"user={self.email}\1auth=Bearer {self.access_token()}")
+                    'XOAUTH2', lambda _: self.generate_auth_token(token))
 
                 """ r, d = self.imap.login(self.email, self.password) """
 
@@ -143,6 +146,7 @@ class Outlook():
 
         for id in ids:
             self.getEmail(id)
+            print(self.email_message['To'])
             if self.GET_ENV('EMAIL') in self.email_message['To'] and ('link' in self.email_message['Subject'].lower() or 'schedule' in self.email_message['Subject'].lower()):
                 subject = self.email_message['Subject'].replace('-', '')
                 split_subject = subject.split(' ')
