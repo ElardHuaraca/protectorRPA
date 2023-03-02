@@ -72,25 +72,28 @@ class MainProcessCollect():
         for key, mail in mails.items():
             self.save_time(time)
             self.key_ = key
+            try:
+                if mail['schedule'] is not None and mail['link'] is None:
+                    link = self.get_email_saved()
+                    if link is not None:
+                        self.apply_filters(mail['schedule'], link.body)
+                    else:
+                        self.save_email_body(mail, 'schedule')
+                        continue
 
-            if mail['schedule'] is not None and mail['link'] is None:
-                link = self.get_email_saved()
-                if link is not None:
-                    self.apply_filters(mail['schedule'], link.body)
+                elif mail['schedule'] is None and mail['link'] is not None:
+                    schedule = self.get_email_saved()
+                    if schedule is not None:
+                        self.apply_filters(schedule.body, mail['link'])
+                    else:
+                        self.save_email_body(mail, 'link')
+                        continue
                 else:
-                    self.save_email_body(mail, 'schedule')
-                    continue
-
-            elif mail['schedule'] is None and mail['link'] is not None:
-                schedule = self.get_email_saved()
-                if schedule is not None:
-                    self.apply_filters(schedule.body, mail['link'])
-                else:
-                    self.save_email_body(mail, 'link')
-                    continue
-            else:
-                self.apply_filters(mail['schedule'], mail['link'])
-
+                    self.apply_filters(mail['schedule'], mail['link'])
+            except Exception as e:
+                print(e)
+                print('Error in process %s' % key)
+                continue
         print('End process mails')
 
     """ send email with link and delete all sheets in excel file """
