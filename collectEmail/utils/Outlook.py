@@ -146,7 +146,7 @@ class Outlook():
 
         for id in ids:
             self.getEmail(id)
-            print(self.email_message['To'])
+
             if self.GET_ENV('EMAIL') in self.email_message['To'] and ('link' in self.email_message['Subject'].lower() or 'schedule' in self.email_message['Subject'].lower()):
                 subject = self.email_message['Subject'].replace('-', '')
                 split_subject = subject.split(' ')
