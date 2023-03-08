@@ -23,4 +23,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('save', views.save, name='save_email'),
     path('admin/', admin.site.urls),
+    path('process/files', views.processFiles, name='process_files'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
