@@ -1,3 +1,16 @@
 .z-first {
     z-index: 99999;
 }
+
+.h-10 {
+    height: 10%;
+}
+
+.bg-no-selected {
+    background: rgba(46, 46, 46, 0.356) !important;
+    color     : rgba(46, 46, 46, 0.356) !important;
+}
+
+.bg-no-selected:hover {
+    color: white !important;
+}
