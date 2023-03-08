@@ -16,16 +16,18 @@ import re
 class MainProcessCollect():
 
     GET_ENV = environ.Env()
+    Normall = None
+    OUTLOOK = Outlook()
 
     def __init__(self):
-        self.start_collect()
+        if self.Normall is None:
+            self.start_collect()
 
     def start_collect(self):
-        self.outlook = Outlook()
-        self.outlook.login()
-        self.outlook.readFolders()
-        ids = self.outlook.readAllIdByDate(days=1)
-        mails = self.outlook.getMailByIdsAndFrom(ids)
+        self.OUTLOOK.login()
+        self.OUTLOOK.readFolders()
+        ids = self.OUTLOOK.readAllIdByDate(days=2)
+        mails = self.OUTLOOK.getMailByIdsAndFrom(ids)
         self.wait_more_emails(mails)
 
     """ first request create file to write items for Link """
@@ -109,7 +111,7 @@ class MainProcessCollect():
             self.deleteSheet(self.GET_ENV('FILE_4'), 'Sheet')
             self.deleteSheet(self.GET_ENV('FILE_5'), 'Sheet')
 
-            state_send = self.outlook.send_mail(
+            state_send = self.OUTLOOK.send_mail(
                 to=email.email, subject='Reportes para hacer el LINK',)
             if state_send:
 
@@ -365,7 +367,6 @@ class MainProcessCollect():
     """ Separate schedule to week and month """
 
     def separate_table_schedule_men_sem(self):
-        """ print(self.table_schedule[0]) """
 
         table_schedule_sem = self.table_schedule[0].query(
             "Specification.str.contains('(?i)sem')", engine='python')
@@ -389,26 +390,24 @@ class MainProcessCollect():
 
     def write_excel_file(self, table, file_name):
         wb = load_workbook(file_name)
-
         sheet_exist = self.key_ in wb.sheetnames
 
-        writer = pd.ExcelWriter(file_name, engine='openpyxl')
-        writer.book = wb
+        with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
+            writer.book = wb
 
-        """ Copy all sheets of file """
-        writer.sheets = dict((ws.title, ws) for ws in writer.book.worksheets)
+            """ Copy all sheets of file """
+            writer.sheets.update(dict((ws.title, ws)
+                                      for ws in wb.worksheets))
 
-        if sheet_exist:
-            """ writer in sheet if exist"""
-            book_writed = len(wb[self.key_]['A']) + 1
+            if sheet_exist:
+                """ writer in sheet if exist"""
+                book_writed = len(wb[self.key_]['A']) + 1
 
-            table.to_excel(writer, sheet_name=self.key_,
-                           startrow=book_writed, index=False, header=False)
-        else:
-            table.to_excel(writer, sheet_name=self.key_, index=False)
-
-        writer.save()
-        writer.close()
+                table.to_excel(writer, sheet_name=self.key_,
+                               startrow=book_writed, index=False, header=False)
+            else:
+                table.to_excel(writer, sheet_name=self.key_,
+                               index=False)
 
     """ Delete sheet innecesary"""
 
