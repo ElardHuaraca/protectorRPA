@@ -10,7 +10,9 @@
     <meta name="keywords" content="Pagina de inicio" />
     <title>Establecer EMAIL</title>
     {% bootstrap_css %}
+    {% bootstrap_javascript %}
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"/>
+    <script src="{% static 'js/index.js' %}"></script>
     <link rel="icon" type="image/ico" href="{% static '/favicon.ico' %}" />
   </head>
   <body>
@@ -19,25 +21,64 @@
       <div class="position-absolute h-100 w-100"
            style="background-color: rgba(35,35,35,.8)"></div>
       <div class="position-absolute z-first w-100">
-        <div class="vh-100 row mx-auto align-items-center justify-content-center">
-          <div class="col-6 px-5 bg-white py-5 rounded-3">
-            <h3>Por favor establesca el email que recibira las notificaciones:</h3>
-            <form action="{% url 'save_email' %}" method="post">
-              {% csrf_token %}
-              <div class="mb-3">
-                <label for="email" class="fs-4 pb-2">Email</label>
-                <input type="email"
-                       class="form-control"
-                       id="email"
-                       name="email"
-                       placeholder="Introduzca el email"
-                       required/>
+        <div class="vh-100 row">
+          <div class="row align-items-center justify-content-center p-0 m-0 h-10">
+            <div class="col-6 d-block h-100 border-end border-3 border-secondary bg-success p-0">
+              <button class="btn w-100 h-100 fs-4 text-white shadow-none rounded-0" type="button" data-bs-toggle="collapse" data-bs-target="#set_email" aria-expanded="true" aria-controls="set_email"id="btn_1">Asignar Email</button>
+            </div>
+            <div class="col-6 d-block h-100 border-start border-3 border-secondary bg-info p-0">
+              <button class="btn w-100 h-100 fs-4 text-white shadow-none rounded-0 bg-no-selected" type="button" data-bs-toggle="collapse" data-bs-target="#extra" aria-expanded="false" aria-controls="extra"id="btn_2">Extra</button>
+            </div>
+          </div>
+          <div class="row h-100 p-0 justify-content-center align-items-center">
+            <div class="collapse col-10 show" id="set_email">
+              <div class="card card-body">
+              <div class="px-5 bg-white py-5 rounded-3">
+              <h3>Por favor establesca el email que recibira las notificaciones:</h3>
+              <form action="{% url 'save_email' %}" method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                  <label for="email" class="fs-4 pb-2">Email</label>
+                  <input type="email"
+                        class="form-control"
+                        id="email"
+                        name="email"
+                        placeholder="Introduzca el email"
+                        required/>
+                </div>
+                  {% buttons %}
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                  {% endbuttons %}
+                  </form>
+                </div>
               </div>
-              {% buttons %}
-              <button type="submit" class="btn btn-primary">Guardar</button>
-            {% endbuttons %}
-          </form>
-        </div>
+            </div>
+            <div class="collapse col-10" id="extra">
+              <div class="card card-body">
+                <div class="px-5 bg-white py-5 rounded-3">
+                  <h3>Seleccione los archivos que se procesarán</h3>
+                  <div class="mb-3 py-2">
+                    <input type="file" id="files" accept=".html" class="w-100 border border-secondary border-2 p-3" name="file" multiple required>
+                  </div>
+                  {% buttons %}
+                    <button type="submit" class="btn btn-primary" id="btn_3" >Subir, Filtrar y Generar reporte</button>
+                  {% endbuttons %}
+                </div>
+              </div>
+            </div>
+            <div class="collapse col-10" id="progress_files">
+              <div class="card card-body">
+                <div class="px-5 bg-white py-5 rounded-3">
+                  <h3>Procesando . . .</h3>
+                  <div class="border px-2 py-4 rounded-3">
+                    <div class="progress">
+                      <div class="progress-bar bg-danger" id="progress" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100">1%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   </div>
