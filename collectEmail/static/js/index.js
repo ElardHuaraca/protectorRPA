@@ -72,10 +72,7 @@ const InitApp = () => {
         const xmlhttp = new XMLHttpRequest()
 
         const formData = new FormData()
-        files.forEach(file => {
-            console.log(file)
-            formData.append('files', file)
-        })
+        files.forEach(file => { formData.append('files', file) })
 
         xmlhttp.upload.addEventListener('progress', (e) => {
             const progress = Math.round((e.loaded / e.total) * 80)
