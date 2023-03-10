@@ -169,5 +169,5 @@ class Outlook():
                         'link': self.getBody()['message'] if _type == 'link' else None
                     }
 
-        print(self.LOG_INFO + "Emails encontrados y por procesar: %s" % str(stack))
+        print(self.LOG_INFO + "Emails encontrados y por procesar: %s" % len(stack))
         return stack
