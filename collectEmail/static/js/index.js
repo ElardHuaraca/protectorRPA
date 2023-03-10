@@ -84,19 +84,24 @@ const InitApp = () => {
             progress_bar.innerHTML = `${progress}%`
         })
 
-        xmlhttp.addEventListener('load', (e) => {
-            const progress_bar = document.querySelector('#progress')
-            progress_bar.style.width = `100%`
-            progress_bar.innerHTML = `100%`
-            setTimeout(() => {
-                const files = document.querySelector('#files')
-                modal_3.classList.remove('show')
-                btn_1.removeAttribute('disabled')
-                btn_2.removeAttribute('disabled')
-                modal_2.classList.add('show')
-                files.value = ''
-            }, 1000)
-        })
+        /* capture response */
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                const progress_bar = document.querySelector('#progress')
+                progress_bar.style.width = `100%`
+                progress_bar.innerHTML = `100%`
+                setTimeout(() => {
+                    const files = document.querySelector('#files')
+                    modal_3.classList.remove('show')
+                    btn_1.removeAttribute('disabled')
+                    btn_2.removeAttribute('disabled')
+                    modal_2.classList.add('show')
+                    files.value = ''
+                    progress_bar.style.width = `1%`
+                    progress_bar.innerHTML = `1%`
+                }, 2000)
+            }
+        }
 
         xmlhttp.open('POST', '/process/files')
         xmlhttp.setRequestHeader('X-CSRFToken', csrftoken)

@@ -96,6 +96,7 @@ class MainProcessCollect():
                 print(e)
                 print('Error in process %s' % key)
                 continue
+
         print('End process mails')
 
     """ send email with link and delete all sheets in excel file """
