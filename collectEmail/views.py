@@ -107,11 +107,12 @@ def processFiles(request):
     MainProcessCollect.Normall = True
     mainProcessCollect = MainProcessCollect()
     mainProcessCollect.wait_more_emails(stack)
+    MainProcessCollect.Normall = None
 
     for file in files:
         os.remove('temp/%s' % file)
 
-    return JsonResponse({'success': True})
+    return JsonResponse({'status': 'complete'})
 
 
 def getTypeFile(filename):
