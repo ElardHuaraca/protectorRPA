@@ -3,6 +3,7 @@ from django.http import HttpResponseNotFound, JsonResponse
 from collectEmail.models import Email, UltimateVerification
 from collectEmail.utils.Threads import ThreadsStart, MainProcessCollect
 from django.utils import timezone
+from openpyxl import load_workbook
 import re
 import os
 
@@ -83,29 +84,37 @@ def processFiles(request):
 
     stack = {}
     files = os.listdir('temp')
-    for file in files:
-        html_file = open('temp/%s' % file, 'r')
-        html = html_file.read().splitlines()
-        html_file.close()
-
-        """ concat all string split in array to one string """
-        html = ''.join(html)
-
-        [vcenter, type] = getTypeFile(file)
-        if vcenter in stack:
-            stack[vcenter] = {
-                'schedule': html if type == 'schedule' else stack[vcenter]['schedule'],
-                'link': html if type == 'link' else stack[vcenter]['link']
-            }
-        else:
-            stack[vcenter] = {
-                'schedule': html if type == 'schedule' else None,
-                'link': html if type == 'link' else None
-            }
 
     updateTimeForceSendMail()
     MainProcessCollect.Normall = True
     mainProcessCollect = MainProcessCollect()
+
+    for _file in files:
+        [vcenter, type, fileExtension] = getTypeFile(_file)
+
+        if fileExtension != 'html':
+            mainProcessCollect.process_veem_files(
+                load_workbook('temp/%s' % _file), vcenter)
+        else:
+            """ open file and read all lines """
+            file = open('temp/%s' % _file, 'r')
+            html = file.read().splitlines()
+            file.close()
+
+            """ concat all string split in array to one string """
+            html = ''.join(html)
+
+            if vcenter in stack:
+                stack[vcenter] = {
+                    'schedule': html if type == 'schedule' else stack[vcenter]['schedule'],
+                    'link': html if type == 'link' else stack[vcenter]['link']
+                }
+            else:
+                stack[vcenter] = {
+                    'schedule': html if type == 'schedule' else None,
+                    'link': html if type == 'link' else None
+                }
+
     mainProcessCollect.wait_more_emails(stack)
     MainProcessCollect.Normall = None
 
@@ -117,9 +126,10 @@ def processFiles(request):
 
 def getTypeFile(filename):
     _name = str(filename).split('.')[0]
+    fileExtension = str(filename).split('.')[-1]
     vcenter = _name.split(' ')[-1]
     type = 'schedule' if 'schedule' in _name.lower() else 'link'
-    return [vcenter, type]
+    return [vcenter, type, fileExtension]
 
 
 def updateTimeForceSendMail():
