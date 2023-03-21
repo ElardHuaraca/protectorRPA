@@ -3,6 +3,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from os.path import basename
 from urllib.parse import urlencode
+from openpyxl import load_workbook
 import datetime
 import email
 import imaplib
@@ -15,9 +16,6 @@ class Outlook():
 
     LOG_INFO = "OUTLOOK: "
     GET_ENV = environ.Env()
-
-    def __init__(self) -> None:
-        pass
 
     def access_token(self):
         tenant = self.GET_ENV('TENANT_ID')
@@ -77,14 +75,15 @@ class Outlook():
         msg.attach(MIMEText('Reportes para generar el LINK'))
 
         """ add files to email """
-        files = [self.GET_ENV('FILE_1'), self.GET_ENV('FILE_2'), self.GET_ENV(
-            'FILE_3'), self.GET_ENV('FILE_4'), self.GET_ENV('FILE_5')]
-
-        for file in files:
-            with open(file, 'rb') as f:
-                part = MIMEApplication(f.read(), Name=basename(file))
+        for i in range(1, 8):
+            wb = load_workbook(self.GET_ENV('FILE_%s' % i))
+            if 'Sheet' in wb.sheetnames:
+                continue
+            with open(self.GET_ENV('FILE_%s' % i), 'rb') as f:
+                part = MIMEApplication(
+                    f.read(), Name=basename(self.GET_ENV('FILE_%s' % i)))
             part['Content-Disposition'] = 'attachment; filename="%s"' % basename(
-                file)
+                self.GET_ENV('FILE_%s' % i))
             msg.attach(part)
 
         try:
