@@ -127,7 +127,11 @@ class MainProcessCollect():
 
     def save_time(self, time=None):
         if time is None:
-            time = UltimateVerification.objects.create()
+            time = UltimateVerification.objects.all().first()
+            if time is None:
+                time = UltimateVerification.objects.create()
+            else:
+                time = timezone.now()
             time.save()
         else:
             if self.mails_len > 0:
