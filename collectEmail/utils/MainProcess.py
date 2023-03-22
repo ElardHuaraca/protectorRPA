@@ -6,7 +6,8 @@ from collectEmail.utils.Outlook import Outlook
 from collectEmail.models import Email, ScheduleOrLink, UltimateVerification
 from collectEmail.utils.FilterEnum import FilterEnum
 from django.utils import timezone
-from openpyxl import load_workbook, Workbook
+from openpyxl import load_workbook, Workbook, worksheet
+from itertools import chain
 import pandas as pd
 import environ
 import os
@@ -106,11 +107,8 @@ class MainProcessCollect():
 
         if email is not None:
 
-            self.deleteSheet(self.GET_ENV('FILE_1'), 'Sheet')
-            self.deleteSheet(self.GET_ENV('FILE_2'), 'Sheet')
-            self.deleteSheet(self.GET_ENV('FILE_3'), 'Sheet')
-            self.deleteSheet(self.GET_ENV('FILE_4'), 'Sheet')
-            self.deleteSheet(self.GET_ENV('FILE_5'), 'Sheet')
+            for i in range(1, 8):
+                self.deleteSheet(self.GET_ENV('FILE_%s' % i), 'Sheet')
 
             state_send = self.OUTLOOK.send_mail(
                 to=email.email, subject='Reportes para hacer el LINK',)
@@ -221,6 +219,91 @@ class MainProcessCollect():
         self.delete_email_saved()
 
         print('Filters applied %s' % self.key_)
+
+    def process_veem_files(self, xlsx_file: Workbook, vcenter: str):
+        df_1 = pd.DataFrame(columns=['Session Type', 'Specification',
+                                     'Status', 'Mode', 'Start Time', 'Duration', 'GB Written'])
+
+        df_2 = pd.DataFrame(columns=['Status', 'Objects Processed', 'Backup Type', 'Start Time', 'Duration',
+                                     'Processing Rate (MB/Sec)', 'Data Size (GB)', 'Transferred (GB)', 'Total Backup Size (GB)'])
+
+        """ select sheet to xlsx_file is 'Sheet2' """
+        wb = xlsx_file['Sheet2']
+        self.key_ = vcenter.split('_')[0]
+        sheet_merged_cells_ = wb.merged_cells.ranges
+        sheet_merged_cells_sorted = sorted(
+            sheet_merged_cells_, key=lambda x: x.min_row)
+
+        """ Filter merged cell by sem or men """
+        sheet_merged_cells_sem = list(filter(lambda x: x.min_row > 7 and 'sem' in wb.cell(
+            row=x.min_row, column=x.min_col).value.lower(), sheet_merged_cells_sorted))
+        sheet_merged_cells_men = list(filter(lambda x: x.min_row > 7 and 'men' in wb.cell(
+            row=x.min_row, column=x.min_col).value.lower(), sheet_merged_cells_sorted))
+        sheet_merged_cells_delete = list(filter(
+            lambda x: x.min_row > 7 and x not in sheet_merged_cells_sem and x not in sheet_merged_cells_men, sheet_merged_cells_sorted))
+
+        session_type = wb.cell(
+            sheet_merged_cells_sorted[1].min_row, sheet_merged_cells_sorted[1].min_col).value.split(':')[1].strip()
+
+        for index, cell in enumerate(sheet_merged_cells_sorted):
+
+            if index+1 < len(sheet_merged_cells_sorted):
+                cell_end = sheet_merged_cells_sorted[index+1]
+                [range_start, range_end] = [cell.min_row+1, cell_end.min_row-1]
+            else:
+                [range_start, range_end] = [cell.min_row+1, wb.max_row]
+
+            if cell in chain(sheet_merged_cells_sem, sheet_merged_cells_men, sheet_merged_cells_delete):
+                specification = wb.cell(
+                    row=cell.min_row, column=cell.min_col).value.split(':')[1].strip()
+
+            if cell in sheet_merged_cells_delete:
+                df_2 = pd.concat([df_2, pd.DataFrame(
+                    {'Status': [specification]})], axis=0, ignore_index=True)
+
+                for row in range(range_start, range_end+1):
+                    status = wb.cell(row=row, column=cell.min_col).value
+                    process = wb.cell(row=row, column=cell.min_col+1).value
+                    type = wb.cell(row=row, column=cell.min_col+2).value
+                    start_time = wb.cell(row=row, column=cell.min_col+3).value
+                    duration = wb.cell(row=row, column=cell.min_col+4).value
+                    rate = wb.cell(row=row, column=cell.min_col+5).value
+                    data_size = wb.cell(row=row, column=cell.min_col+6).value
+                    transferred = wb.cell(row=row, column=cell.min_col+7).value
+                    total_backup = wb.cell(
+                        row=row, column=cell.min_col+8).value
+
+                    df_2 = pd.concat([df_2, pd.DataFrame({'Status': [status], 'Objects Processed': [process], 'Backup Type': [type], 'Start Time': [start_time], 'Duration': [duration],
+                                                          'Processing Rate (MB/Sec)': [rate], 'Data Size (GB)': [data_size], 'Transferred (GB)': [transferred], 'Total Backup Size (GB)': [total_backup]})], axis=0, ignore_index=True)
+            elif cell in chain(sheet_merged_cells_sem, sheet_merged_cells_men):
+                df = pd.DataFrame(columns=['Session Type', 'Specification',
+                                           'Status', 'Mode', 'Start Time', 'Duration', 'GB Written'])
+
+                for row in range(range_start, range_end+1):
+                    status = wb.cell(row=row, column=cell.min_col).value
+                    mode = wb.cell(row=row, column=cell.min_col+2).value
+                    start_time = wb.cell(row=row, column=cell.min_col+3).value
+                    duration = wb.cell(row=row, column=cell.min_col+4).value
+                    gb_written = wb.cell(row=row, column=cell.min_col+8).value
+
+                    df = pd.concat([df, pd.DataFrame({'Session Type': [session_type], 'Specification': [specification], 'Status': [status], 'Mode': [mode],
+                                                      'Start Time': [start_time], 'Duration': [duration], 'GB Written': [gb_written]})], axis=0, ignore_index=True)
+                """ Sort by Start Time and only get two ultimates when Mode equal [Incremental,Synthetic Full]"""
+                df = df.sort_values(by=['Start Time'], ascending=True)
+                df = df[df['Mode'].isin(['Incremental', 'Synthetic Full'])]
+                """ detect if Mode only contain Incremental | Synthetic Full """
+                if len(df['Mode'].unique()) == 2:
+                    """ if mode unique > 2 get the last 2 equals to [Incremental,Synthetic Full]"""
+                    df = df.groupby(['Mode'], as_index=False).max()
+                    df = df.reset_index(drop=True)
+
+                else:
+                    df = df.iloc[-1:]
+                df = df.reset_index(drop=True)
+                df_1 = pd.concat([df_1, df])
+
+        self.write_excel_file(df_1, self.GET_ENV('FILE_7'))
+        self.write_excel_file(df_2, self.GET_ENV('FILE_6'))
 
     def delete_email_saved(self):
         ScheduleOrLink.objects.filter(id=self.key_).delete()
@@ -414,13 +497,14 @@ class MainProcessCollect():
 
     def deleteSheet(self, file_name, sheet_name):
         wb_f = load_workbook(file_name)
-        del wb_f[sheet_name]
-        wb_f.save(file_name)
-        wb_f.close()
+        if len(wb_f.sheetnames) > 1:
+            del wb_f[sheet_name]
+            wb_f.save(file_name)
+            wb_f.close()
 
     def delete_files(self):
         file = [self.GET_ENV('FILE_1'), self.GET_ENV('FILE_2'), self.GET_ENV(
-            'FILE_3'), self.GET_ENV('FILE_4'), self.GET_ENV('FILE_5')]
+            'FILE_3'), self.GET_ENV('FILE_4'), self.GET_ENV('FILE_5'), self.GET_ENV('FILE_6'), self.GET_ENV('FILE_7')]
         for f in file:
             path = os.path.join(settings.BASE_DIR, f)
             os.remove(path)
