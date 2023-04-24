@@ -7,6 +7,7 @@ from collectEmail.models import Email, ScheduleOrLink, UltimateVerification
 from collectEmail.utils.FilterEnum import FilterEnum
 from django.utils import timezone
 from openpyxl import load_workbook, Workbook, worksheet
+from openpyxl.styles import PatternFill, Font
 from itertools import chain
 import pandas as pd
 import environ
@@ -107,8 +108,13 @@ class MainProcessCollect():
 
         if email is not None:
 
-            for i in range(1, 9):
+            for i in range(1, 8):
                 self.deleteSheet(self.GET_ENV('FILE_%s' % i), 'Sheet')
+
+            """ verify if exist file start with PBI_ """
+            for file in os.listdir(settings.BASE_DIR):
+                if file.startswith('PBI_'):
+                    self.deleteSheet(file, 'Sheet')
 
             state_send = self.OUTLOOK.send_mail(
                 to=email.email, subject='Reportes para hacer el LINK',)
@@ -308,6 +314,41 @@ class MainProcessCollect():
 
         self.write_excel_file(df_1, self.GET_ENV('FILE_7'))
         self.write_excel_file(df_2, self.GET_ENV('FILE_6'))
+
+    def process_pbi_files(self, xlsx_file: Workbook, file_name: str):
+        """ convert woorbook to dataframe + headers """
+        df = pd.read_excel(xlsx_file, header=0,engine='openpyxl')
+
+        """ delete colums not needed """
+        df.drop(FilterEnum.PBI, axis=1, inplace=True)
+
+        """ order by start_time """
+        df.sort_values(by=['start_time'], ascending=False,inplace=True)
+
+        """ Delete duplicated values """
+        df.drop_duplicates(subset=['job_name'], keep='first', inplace=True)
+
+        """ Rename file PBI_.xlsx to  file_name"""
+        os.rename(self.GET_ENV('FILE_8'), file_name)
+
+        self.key_ = xlsx_file.active.title
+        self.write_excel_file(df, file_name)
+
+        woorkbook = load_workbook(file_name)
+        sheet = woorkbook['Export']
+        headers_range = sheet['A1':'J1']
+        fill = PatternFill(start_color='ffd100', end_color='ffd100', fill_type='solid')
+
+        for cell in headers_range[0]:
+            cell.fill = fill
+
+        font = Font(bold=True)
+        for cell in headers_range[0]:
+            cell.font = font
+
+        woorkbook.save(file_name)
+
+        print('process_pbi_files')
 
     def delete_email_saved(self):
         ScheduleOrLink.objects.filter(id=self.key_).delete()
