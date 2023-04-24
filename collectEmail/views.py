@@ -93,7 +93,10 @@ def processFiles(request):
         [vcenter, type, fileExtension] = getTypeFile(_file)
 
         if fileExtension != 'html':
-            mainProcessCollect.process_veem_files(
+            if _file.startswith('PBI_'):
+                mainProcessCollect.process_pbi_files(load_workbook('temp/%s' % _file), _file)
+            else:
+                mainProcessCollect.process_veem_files(
                 load_workbook('temp/%s' % _file), vcenter)
         else:
             """ open file and read all lines """
