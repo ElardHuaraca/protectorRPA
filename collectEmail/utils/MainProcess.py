@@ -107,7 +107,7 @@ class MainProcessCollect():
 
         if email is not None:
 
-            for i in range(1, 8):
+            for i in range(1, 9):
                 self.deleteSheet(self.GET_ENV('FILE_%s' % i), 'Sheet')
 
             state_send = self.OUTLOOK.send_mail(

@@ -75,7 +75,7 @@ class Outlook():
         msg.attach(MIMEText('Reportes para generar el LINK'))
 
         """ add files to email """
-        for i in range(1, 8):
+        for i in range(1, 9):
             wb = load_workbook(self.GET_ENV('FILE_%s' % i))
             if 'Sheet' in wb.sheetnames:
                 continue
