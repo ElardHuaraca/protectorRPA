@@ -4,6 +4,8 @@ from email.mime.text import MIMEText
 from os.path import basename
 from urllib.parse import urlencode
 from openpyxl import load_workbook
+from automationDataProtector import settings
+import os
 import datetime
 import email
 import imaplib
@@ -75,7 +77,7 @@ class Outlook():
         msg.attach(MIMEText('Reportes para generar el LINK'))
 
         """ add files to email """
-        for i in range(1, 9):
+        for i in range(1, 8):
             wb = load_workbook(self.GET_ENV('FILE_%s' % i))
             if 'Sheet' in wb.sheetnames:
                 continue
@@ -85,6 +87,16 @@ class Outlook():
             part['Content-Disposition'] = 'attachment; filename="%s"' % basename(
                 self.GET_ENV('FILE_%s' % i))
             msg.attach(part)
+
+        for file in os.listdir(settings.BASE_DIR):
+            if file.startswith('PBI_'):
+                wb = load_workbook(file)
+                if 'Sheet' in wb.sheetnames:
+                    continue
+                with open(file, 'rb') as f:
+                    part = MIMEApplication(f.read(), Name=basename(file))
+                part['Content-Disposition'] = 'attachment; filename="%s"' % basename(file)
+                msg.attach(part)
 
         try:
             self.smtp = smtplib.SMTP(self.GET_ENV(
