@@ -510,8 +510,13 @@ class MainProcessCollect():
         file = [self.GET_ENV('FILE_1'), self.GET_ENV('FILE_2'), self.GET_ENV(
             'FILE_3'), self.GET_ENV('FILE_4'), self.GET_ENV('FILE_5'), self.GET_ENV('FILE_6'), self.GET_ENV('FILE_7')]
         for f in file:
-            path = os.path.join(settings.BASE_DIR, f)
-            os.remove(path)
+            os.remove(os.path.join(settings.BASE_DIR, f))
+
+        for f in os.listdir(settings.BASE_DIR):
+            if f.startswith('PBI_'):
+                os.remove(os.path.join(settings.BASE_DIR, f))
+
+        file.append(self.GET_ENV('FILE_8'))
 
         for f in file:
             MainProcessCollect.saveFirstFile(f)
