@@ -328,6 +328,9 @@ class MainProcessCollect():
         """ Delete duplicated values """
         df.drop_duplicates(subset=['job_name'], keep='first', inplace=True)
 
+        """ Order by job_name """
+        df.sort_values(by=['job_name'], ascending=True,inplace=True)
+
         """ Rename file PBI_.xlsx to  file_name"""
         os.rename(self.GET_ENV('FILE_8'), file_name)
 
@@ -347,8 +350,6 @@ class MainProcessCollect():
             cell.font = font
 
         woorkbook.save(file_name)
-
-        print('process_pbi_files')
 
     def delete_email_saved(self):
         ScheduleOrLink.objects.filter(id=self.key_).delete()
