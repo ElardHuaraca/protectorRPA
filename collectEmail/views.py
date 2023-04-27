@@ -4,6 +4,7 @@ from collectEmail.models import Email, UltimateVerification
 from collectEmail.utils.Threads import ThreadsStart, MainProcessCollect
 from django.utils import timezone
 from openpyxl import load_workbook
+from automationDataProtector import settings
 import re
 import os
 
@@ -72,6 +73,15 @@ def isValidEmail(email):
 
 
 def processFiles(request):
+    for file in files:
+        os.remove('temp/%s' % file)
+
+    for file in os.listdir(settings.BASE_DIR):
+        if file.startswith('PBI_'):
+            if re.match(r'^PBI_\d{8}\.xlsx', file) != None:
+                os.remove(file)
+                MainProcessCollect.saveFirstFile('PBI_.xlsx')
+
     list_files = request.FILES.getlist('files')
 
     if not os.path.exists('temp'):
@@ -94,10 +104,11 @@ def processFiles(request):
 
         if fileExtension != 'html':
             if _file.startswith('PBI_'):
-                mainProcessCollect.process_pbi_files(load_workbook('temp/%s' % _file), _file)
+                mainProcessCollect.process_pbi_files(
+                    load_workbook('temp/%s' % _file), _file)
             else:
                 mainProcessCollect.process_veem_files(
-                load_workbook('temp/%s' % _file), vcenter)
+                    load_workbook('temp/%s' % _file), vcenter)
         else:
             """ open file and read all lines """
             file = open('temp/%s' % _file, 'r')
