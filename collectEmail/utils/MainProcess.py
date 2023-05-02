@@ -317,19 +317,22 @@ class MainProcessCollect():
 
     def process_pbi_files(self, xlsx_file: Workbook, file_name: str):
         """ convert woorbook to dataframe + headers """
-        df = pd.read_excel(xlsx_file, header=0,engine='openpyxl')
+        df = pd.read_excel(xlsx_file, header=0, engine='openpyxl')
 
         """ delete colums not needed """
         df.drop(FilterEnum.PBI, axis=1, inplace=True)
 
+        """ delete job_name if bit content 'COPIA,copia,Copia' """
+        df.query("job_name.str.contains('COPIA|copia|Copia') == False", inplace=True)
+
         """ order by start_time """
-        df.sort_values(by=['start_time'], ascending=False,inplace=True)
+        df.sort_values(by=['start_time'], ascending=False, inplace=True)
 
         """ Delete duplicated values """
         df.drop_duplicates(subset=['job_name'], keep='first', inplace=True)
 
         """ Order by job_name """
-        df.sort_values(by=['job_name'], ascending=True,inplace=True)
+        df.sort_values(by=['job_name'], ascending=True, inplace=True)
 
         """ Rename file PBI_.xlsx to  file_name"""
         os.rename(self.GET_ENV('FILE_8'), file_name)
@@ -340,7 +343,8 @@ class MainProcessCollect():
         woorkbook = load_workbook(file_name)
         sheet = woorkbook['Export']
         headers_range = sheet['A1':'J1']
-        fill = PatternFill(start_color='ffd100', end_color='ffd100', fill_type='solid')
+        fill = PatternFill(start_color='ffd100',
+                           end_color='ffd100', fill_type='solid')
 
         for cell in headers_range[0]:
             cell.fill = fill

@@ -5,4 +5,5 @@ class FilterEnum(enumerate):
     STATUS = ['aborted', 'failed', 'completed/failures']
     MALFORMED = ['<= /font>', '=font>', '< /font>',
                  '</font>', '&nbsp;', '= font>', '= ', '=']
-    PBI = ['group', 'sizeGB', 'reason_status', 'description_status','content', 'frequency', 'environment']
+    PBI = ['group', 'sizeGB', 'reason_status', 'description_status', 'content',
+           'frequency', 'environment', 'Duración', 'category_status', 'type']
