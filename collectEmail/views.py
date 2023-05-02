@@ -73,7 +73,7 @@ def isValidEmail(email):
 
 
 def processFiles(request):
-    for file in files:
+    for file in os.listdir('temp'):
         os.remove('temp/%s' % file)
 
     for file in os.listdir(settings.BASE_DIR):
@@ -93,8 +93,6 @@ def processFiles(request):
                 destination.write(chunk)
 
     stack = {}
-    files = os.listdir('temp')
-
     updateTimeForceSendMail()
     MainProcessCollect.Normall = True
     mainProcessCollect = MainProcessCollect()
