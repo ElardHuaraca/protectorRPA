@@ -132,9 +132,6 @@ def processFiles(request):
     mainProcessCollect.wait_more_emails(stack)
     MainProcessCollect.Normall = None
 
-    for file in files:
-        os.remove('temp/%s' % file)
-
     return JsonResponse({'status': 'complete'})
 
 
