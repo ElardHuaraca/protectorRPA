@@ -111,7 +111,7 @@ def processFiles(request):
             else:
                 mainProcessCollect.process_veem_files(
                     load_workbook('temp/%s' % _file), vcenter)
-        else:
+        elif _file.lower().startswith('schedule') or _file.lower().startswith('link'):
             """ open file and read all lines """
             file = open('temp/%s' % _file, 'r')
             html = file.read().splitlines()
@@ -130,6 +130,8 @@ def processFiles(request):
                     'schedule': html if type == 'schedule' else None,
                     'link': html if type == 'link' else None
                 }
+        else:
+            continue
 
     mainProcessCollect.wait_more_emails(stack)
     MainProcessCollect.Normall = None
