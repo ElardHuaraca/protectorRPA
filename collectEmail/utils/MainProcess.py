@@ -104,17 +104,14 @@ class MainProcessCollect():
     """ send email with link and delete all sheets in excel file """
 
     def send_report_link(self):
+        if self.Normall:
+            return
+
         email = Email.objects.all().first()
 
         if email is not None:
 
-            for i in range(1, 8):
-                self.deleteSheet(self.GET_ENV('FILE_%s' % i), 'Sheet')
-
-            """ verify if exist file start with PBI_ """
-            for file in os.listdir(settings.BASE_DIR):
-                if file.startswith('PBI_'):
-                    self.deleteSheet(file, 'Sheet')
+            self.delete_sheet_default()
 
             state_send = self.OUTLOOK.send_mail(
                 to=email.email, subject='Reportes para hacer el LINK',)
@@ -547,7 +544,7 @@ class MainProcessCollect():
 
     def deleteSheet(self, file_name, sheet_name):
         wb_f = load_workbook(file_name)
-        if len(wb_f.sheetnames) > 1:
+        if len(wb_f.sheetnames) > 1 and sheet_name in wb_f.sheetnames:
             del wb_f[sheet_name]
             wb_f.save(file_name)
             wb_f.close()
@@ -566,3 +563,12 @@ class MainProcessCollect():
 
         for f in file:
             MainProcessCollect.saveFirstFile(f)
+
+    def delete_sheet_default(self):
+        for i in range(1, 8):
+            self.deleteSheet(self.GET_ENV('FILE_%s' % i), 'Sheet')
+
+        """ verify if exist file start with PBI_ """
+        for file in os.listdir(settings.BASE_DIR):
+            if file.startswith('PBI_'):
+                self.deleteSheet(file, 'Sheet')
