@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponseNotFound, JsonResponse, HttpResponse
 from collectEmail.models import Email, UltimateVerification
 from collectEmail.utils.Threads import ThreadsStart, MainProcessCollect
 from django.utils import timezone
@@ -7,6 +7,9 @@ from openpyxl import load_workbook
 from automationDataProtector import settings
 import re
 import os
+import zipfile
+import io
+import environ
 
 # Create your views here.
 
@@ -61,6 +64,31 @@ def save(request):
         return render(request, 'index.html', context)
     else:
         return HttpResponseNotFound()
+
+
+def download(_):
+    GET_ENV = environ.Env()
+    tempt_file = io.BytesIO()
+
+    MainProcessCollect.Normall = True
+    mainProcessCollect = MainProcessCollect()
+    mainProcessCollect.delete_sheet_default()
+
+    with zipfile.ZipFile(tempt_file, 'w') as zip:
+        for file in os.listdir(settings.BASE_DIR):
+            for i in range(1, 9):
+                if file.startswith(GET_ENV('FILE_%s' % i).split('.')[0]):
+                    zip.write(file)
+    tempt_file.seek(0)
+
+    response = HttpResponse(tempt_file, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename=%s' % 'reportes.zip'
+
+
+    mainProcessCollect.delete_files()
+    MainProcessCollect.Normall = None
+
+    return response
 
 
 def isValidEmail(email):
