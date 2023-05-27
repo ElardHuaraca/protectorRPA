@@ -50,6 +50,7 @@ const InitApp = () => {
 
     /* Submit file multiply */
     const btn_3 = document.querySelector('#btn_3')
+    const btn_4 = document.querySelector('#btn_4')
     const modal_3 = document.querySelector('#progress_files')
 
     btn_3.addEventListener('click', () => {
@@ -63,6 +64,7 @@ const InitApp = () => {
         /* diable button 1,2 */
         btn_1.setAttribute('disabled', 'disabled')
         btn_2.setAttribute('disabled', 'disabled')
+        btn_4.setAttribute('disabled', 'disabled')
 
         sendFiles(Array.from(files.files))
     })
@@ -92,10 +94,13 @@ const InitApp = () => {
                     modal_3.classList.remove('show')
                     btn_1.removeAttribute('disabled')
                     btn_2.removeAttribute('disabled')
+                    btn_4.removeAttribute('disabled')
+                    btn_4.classList.remove('disabled')
                     modal_2.classList.add('show')
                     files.value = ''
                     progress_bar.style.width = `1%`
                     progress_bar.innerHTML = `1%`
+
                 }, 2000)
             }
         }

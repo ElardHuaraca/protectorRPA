@@ -73,14 +73,22 @@
             <div class="card card-body">
               <div class="px-5 bg-white py-5 rounded-3">
                 <h3>Seleccione los archivos que se procesarán</h3>
-                <div class="mb-3 py-2">
-                  <input type="file"
+                <div class="mb-3 py-2 row">
+                  <div class="col-9 p-2">
+                    <input type="file"
                          id="files"
                          accept=".html,.xlsx"
-                         class="w-100 border border-secondary border-2 p-3"
+                         class="border border-secondary border-2 p-3 w-100"
                          name="file"
                          multiple
                          required/>
+                  </div>
+                  <div class="col-3 d-flex justify-content-center align-items-center">
+                    <a class="btn btn-success w-100 h-50 disabled d-flex align-items-center text-center justify-content-center"
+                              id="btn_4" href="{% url 'download'  %}">
+                        Descargar archivos
+                    </a>
+                  </div>
                 </div>
                 {% buttons %}
                 <button type="submit" class="btn btn-primary" id="btn_3">Subir, Filtrar y Generar reporte</button>
