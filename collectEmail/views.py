@@ -84,7 +84,7 @@ def download(_):
     response = HttpResponse(tempt_file, content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename=%s' % 'reportes.zip'
 
-
+    deleteTimeOnDownloadReports()
     mainProcessCollect.delete_files()
     MainProcessCollect.Normall = None
 
@@ -125,7 +125,6 @@ def processFiles(request):
     stack = {}
     files = os.listdir('temp')
 
-    updateTimeForceSendMail()
     MainProcessCollect.Normall = True
     mainProcessCollect = MainProcessCollect()
 
@@ -181,3 +180,9 @@ def updateTimeForceSendMail():
         time = UltimateVerification.objects.create()
     time.comprovate = timezone.now() - timezone.timedelta(hours=4)
     time.save()
+
+
+def deleteTimeOnDownloadReports():
+    time = UltimateVerification.objects.all().first()
+    if time:
+        time.delete()
