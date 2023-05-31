@@ -108,7 +108,7 @@ def processFiles(request):
 
     for file in os.listdir(settings.BASE_DIR):
         if file.startswith('PBI_'):
-            if re.match(r'^PBI_\d{8}\.xlsx', file) != None:
+            if re.search(r'_[A-Za-z0-9]+', file) is not None:
                 os.remove(file)
                 MainProcessCollect.saveFirstFile('PBI_.xlsx')
 
