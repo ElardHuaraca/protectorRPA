@@ -464,7 +464,7 @@ class MainProcessCollect():
 
     def copy_schedule_link_to_table_schedule(self):
         table_schedule_copy = pd.merge(self.table_schedule[0], self.table_link[0], how='right', on=[
-            'Specification_lower'], indicator=True).set_axis(self.table_link[0].index)
+            'Specification_lower'], indicator=True).reindex(self.table_link[0].index)
 
         table_schedule_copy_both = table_schedule_copy.query(
             '_merge == "both"', engine='python')
