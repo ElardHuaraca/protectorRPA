@@ -95,7 +95,8 @@ class Outlook():
                     continue
                 with open(file, 'rb') as f:
                     part = MIMEApplication(f.read(), Name=basename(file))
-                part['Content-Disposition'] = 'attachment; filename="%s"' % basename(file)
+                part['Content-Disposition'] = 'attachment; filename="%s"' % basename(
+                    file)
                 msg.attach(part)
 
         try:
@@ -157,6 +158,9 @@ class Outlook():
 
         for id in ids:
             self.getEmail(id)
+
+            if self.email_message['To'] is None:
+                continue
 
             if self.GET_ENV('EMAIL') in self.email_message['To'] and ('link' in self.email_message['Subject'].lower() or 'schedule' in self.email_message['Subject'].lower()):
                 subject = self.email_message['Subject'].replace('-', '')
