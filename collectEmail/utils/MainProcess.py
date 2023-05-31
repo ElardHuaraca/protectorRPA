@@ -7,7 +7,7 @@ from collectEmail.models import Email, ScheduleOrLink, UltimateVerification
 from collectEmail.utils.FilterEnum import FilterEnum
 from django.utils import timezone
 from openpyxl import load_workbook, Workbook, worksheet
-from openpyxl.styles import PatternFill, Font
+from openpyxl.styles import PatternFill, Font, numbers
 from itertools import chain
 import pandas as pd
 import environ
@@ -339,12 +339,18 @@ class MainProcessCollect():
 
         woorkbook = load_workbook(file_name)
         sheet = woorkbook['Export']
+        max_row = sheet.max_row
         headers_range = sheet['A1':'J1']
+        dateformat = sheet['E1':f'F{max_row}']
         fill = PatternFill(start_color='ffd100',
                            end_color='ffd100', fill_type='solid')
 
         for cell in headers_range[0]:
             cell.fill = fill
+
+        for rows in dateformat:
+            for cell in rows:
+                cell.number_format = numbers.FORMAT_DATE_DDMMYY + " " + numbers.FORMAT_DATE_TIME4
 
         font = Font(bold=True)
         for cell in headers_range[0]:
