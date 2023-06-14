@@ -1,6 +1,7 @@
 class FilterEnum(enumerate):
-    GROUP = ['apagado', 'migrado', 'baja', 'de_baja', 'pendiente baja',
-             'de baja', 'desactivado_temporalmente', 'test', 'migrado', 'historico', 'migra_veeam']
+    GROUP = ['apagado', 'migrado', 'baja', 'de_baja', 'pendiente baja', 'de baja',
+             'desactivado_temporalmente', 'test', 'historico', 'baja_genesys',
+             'default', 'demanda', 'migra_veem_posi', 'reubicacion', 'tarea de baja']
     SPECIFICATION = ['dia', 'dem', 'demanda', 'crq', 'rfc']
     STATUS = ['aborted', 'failed', 'completed/failures']
     MALFORMED = ['<= /font>', '=font>', '< /font>',
